@@ -97,7 +97,8 @@
 		<!-- on jar ensemble tous les jars dependant -->
 		<jar destfile="${jar}" basedir="build" duplicate="preserve" filesetmanifest="mergewithoutmain">
 			<metainf file="LICENSE.txt" />
-			<zipgroupfileset dir="lib" includes="*.jar" />
+			<zipgroupfileset dir="lib" includes="*.jar"
+							 excludes="junit*.jar, hamcrest*.jar, itext*.jar"/>
 		</jar>
 	</target>
 
