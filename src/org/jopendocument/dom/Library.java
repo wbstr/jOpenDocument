@@ -643,10 +643,10 @@ public abstract class Library {
             final EmbeddedLibrary other = (EmbeddedLibrary) obj;
             if (this.passwordProtected != other.passwordProtected)
                 return false;
-            return canBeMerged(this.modules, other.modules) && canBeMerged(this.dialogs, other.dialogs);
+            return canBeMerged2(this.modules, other.modules) && canBeMerged2(this.dialogs, other.dialogs);
         }
 
-        static private final <V> boolean canBeMerged(final Map<String, V> m1, final Map<String, V> m2) {
+        static private final <V> boolean canBeMerged2(final Map<String, V> m1, final Map<String, V> m2) {
             final Set<String> duplicateKeys = CollectionUtils.inter(m1.keySet(), m2.keySet());
             for (final String key : duplicateKeys) {
                 final V v1 = m1.get(key);
