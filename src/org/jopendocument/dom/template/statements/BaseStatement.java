@@ -40,7 +40,7 @@ public abstract class BaseStatement extends Statement {
     }
 
     public void prepare(Element scriptElem) throws TemplateException {
-        prepare(scriptElem, this.parseScript(scriptElem.getText()));
+        prepare(scriptElem, this.parseScript(scriptElem.getText().replace("&", "&amp;")));
     }
 
     protected abstract void prepare(Element script, Element command) throws TemplateException;
