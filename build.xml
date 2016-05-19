@@ -46,7 +46,7 @@
 		<echo>Building JDK6 version</echo>
 		<delete dir="build" />
 		<mkdir dir="build" />
-		<javac srcdir="src/" destdir="build">
+		<javac srcdir="src/" destdir="build" debug="on">
 			<compilerarg value="-Xlint:deprecation" />
 			<compilerarg value="-Xlint:unchecked" />
 			<classpath>
