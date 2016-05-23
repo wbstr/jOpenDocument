@@ -15,8 +15,12 @@
 
 package org.jopendocument.dom;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.xpath.XPath;
 import org.jopendocument.dom.Library.EmbeddedLibrary;
 import org.jopendocument.dom.Library.LinkedLibrary;
 import org.jopendocument.dom.ODPackage.RootElement;
@@ -32,29 +36,16 @@ import org.jopendocument.util.CollectionUtils;
 import org.jopendocument.util.CompareUtils;
 import org.jopendocument.util.TimeUtils;
 
-import java.awt.Color;
+import javax.xml.datatype.Duration;
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 
-import javax.xml.datatype.Duration;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.xpath.XPath;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 public class ODSingleXMLDocumentTest extends TestCase {
 

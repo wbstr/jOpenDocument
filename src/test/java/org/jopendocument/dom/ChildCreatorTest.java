@@ -15,17 +15,11 @@
 
 package org.jopendocument.dom;
 
+import junit.framework.TestCase;
+import org.jdom.Element;
 import org.jopendocument.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import junit.framework.TestCase;
-
-import org.jdom.Element;
+import java.util.*;
 
 public class ChildCreatorTest extends TestCase {
 

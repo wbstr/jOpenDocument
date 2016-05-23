@@ -15,16 +15,11 @@
 
 package org.jopendocument.dom.spreadsheet;
 
-import static java.util.Arrays.asList;
-import org.jopendocument.dom.ODDocument;
-import org.jopendocument.dom.ODPackage;
+import junit.framework.TestCase;
+import org.jdom.Attribute;
+import org.jdom.Element;
+import org.jopendocument.dom.*;
 import org.jopendocument.dom.ODPackage.RootElement;
-import org.jopendocument.dom.ODValueType;
-import org.jopendocument.dom.OOXML;
-import org.jopendocument.dom.Style;
-import org.jopendocument.dom.StyleStyleDesc;
-import org.jopendocument.dom.XMLFormatVersion;
-import org.jopendocument.dom.XMLVersion;
 import org.jopendocument.dom.spreadsheet.CellStyle.StyleTableCellProperties;
 import org.jopendocument.dom.spreadsheet.SheetTableModel.MutableTableModel;
 import org.jopendocument.dom.style.SideStyleProperties.Side;
@@ -32,31 +27,23 @@ import org.jopendocument.dom.text.Paragraph;
 import org.jopendocument.dom.text.ParagraphStyle;
 import org.jopendocument.dom.text.TextDocument;
 import org.jopendocument.dom.text.TextStyle.StyleTextProperties;
+import org.jopendocument.util.SimpleXMLPath;
 import org.jopendocument.util.TimeUtils;
 import org.jopendocument.util.Tuple2;
-import org.jopendocument.util.SimpleXMLPath;
 import org.jopendocument.util.Validator;
 
-import java.awt.Color;
-import java.awt.Point;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-
-import junit.framework.TestCase;
-
-import org.jdom.Attribute;
-import org.jdom.Element;
+import static java.util.Arrays.asList;
 
 public class SheetTest extends TestCase {
 

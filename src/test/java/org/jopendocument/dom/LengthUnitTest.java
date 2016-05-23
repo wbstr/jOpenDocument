@@ -15,11 +15,10 @@
 
 package org.jopendocument.dom;
 
+import junit.framework.TestCase;
 import org.jopendocument.util.Tuple2;
 
 import java.math.BigDecimal;
-
-import junit.framework.TestCase;
 
 public class LengthUnitTest extends TestCase {
 

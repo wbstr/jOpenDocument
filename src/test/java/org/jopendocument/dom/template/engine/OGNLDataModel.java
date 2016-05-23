@@ -15,11 +15,11 @@
 
 package org.jopendocument.dom.template.engine;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import ognl.Ognl;
 import ognl.OgnlException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Contains data as regular Java objects.

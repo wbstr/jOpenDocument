@@ -15,6 +15,9 @@
 
 package org.jopendocument.dom.style.data;
 
+import junit.framework.TestCase;
+import org.jdom.Element;
+import org.jdom.Namespace;
 import org.jopendocument.dom.ODEpoch;
 import org.jopendocument.dom.ODPackage;
 import org.jopendocument.dom.ODValueType;
@@ -26,19 +29,13 @@ import org.jopendocument.dom.spreadsheet.SpreadSheet;
 import org.jopendocument.dom.style.data.DataStyle.DataStyleDesc;
 import org.jopendocument.util.TimeUtils;
 
-import java.awt.Color;
+import javax.xml.datatype.Duration;
+import java.awt.*;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import javax.xml.datatype.Duration;
-
-import junit.framework.TestCase;
-
-import org.jdom.Element;
-import org.jdom.Namespace;
 
 public class DataStyleTest extends TestCase {
 

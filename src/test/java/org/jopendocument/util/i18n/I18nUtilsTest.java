@@ -15,10 +15,10 @@
 
 package org.jopendocument.util.i18n;
 
+import junit.framework.TestCase;
+
 import java.util.Arrays;
 import java.util.Locale;
-
-import junit.framework.TestCase;
 
 public class I18nUtilsTest extends TestCase {
 

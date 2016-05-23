@@ -15,12 +15,11 @@
 
 package org.jopendocument.dom;
 
+import junit.framework.TestCase;
 import org.jopendocument.util.JDOMUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import junit.framework.TestCase;
 
 public class OOXMLTest extends TestCase {
 

@@ -15,6 +15,7 @@
 
 package org.jopendocument.util.convertor;
 
+import junit.framework.TestCase;
 import org.jopendocument.util.NumberUtils;
 import org.jopendocument.util.convertor.NumberConvertor.OverflowException;
 import org.jopendocument.util.convertor.NumberConvertor.RoundingException;
@@ -27,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
-import junit.framework.TestCase;
 
 public class NumberConvertorTest extends TestCase {
 
