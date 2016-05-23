@@ -1,81 +1,41 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
+ *
  * Copyright 2008-2013 jOpenDocument, by ILM Informatique. All rights reserved.
- * 
+ *
  * The contents of this file are subject to the terms of the GNU
- * General Public License Version 3 only ("GPL").  
- * You may not use this file except in compliance with the License. 
+ * General Public License Version 3 only ("GPL").
+ * You may not use this file except in compliance with the License.
  * You can obtain a copy of the License at http://www.gnu.org/licenses/gpl-3.0.html
  * See the License for the specific language governing permissions and limitations under the License.
- * 
+ *
  * When distributing the software, include this License Header Notice in each file.
- * 
+ *
  */
 
 package org.jopendocument.dom;
 
+import java.io.*;
+import java.nio.charset.Charset;
+import java.util.Map.Entry;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import org.jdom.*;
+import org.jdom.output.Format;
+import org.jdom.output.XMLOutputter;
+import org.jopendocument.dom.EventListener;
 import static org.jopendocument.dom.ODPackage.RootElement.CONTENT;
 import static org.jopendocument.dom.ODPackage.RootElement.META;
 import static org.jopendocument.dom.ODPackage.RootElement.STYLES;
 import org.jopendocument.dom.spreadsheet.SpreadSheet;
 import org.jopendocument.dom.text.TextDocument;
-import org.jopendocument.util.CollectionMap;
-import org.jopendocument.util.CopyUtils;
-import org.jopendocument.util.ExceptionUtils;
-import org.jopendocument.util.FileUtils;
-import org.jopendocument.util.ProductInfo;
-import org.jopendocument.util.PropertiesUtils;
-import org.jopendocument.util.StreamUtils;
-import org.jopendocument.util.StringInputStream;
-import org.jopendocument.util.StringUtils;
-import org.jopendocument.util.Tuple2;
-import org.jopendocument.util.Tuple3;
-import org.jopendocument.util.Zip;
-import org.jopendocument.util.ZippedFilesProcessor;
+import org.jopendocument.util.*;
 import org.jopendocument.util.cc.ITransformer;
 import org.jopendocument.util.io.DataInputStream;
-import org.jopendocument.util.JDOMUtils;
-import org.jopendocument.util.Validator;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-
-import org.jdom.Attribute;
-import org.jdom.DocType;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.Namespace;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
 
 /**
  * An OpenDocument package, ie a zip containing XML documents and their associated files.
- * 
+ *
  * @author ILM Informatique 2 août 2004
  */
 public class ODPackage {
@@ -90,7 +50,7 @@ public class ODPackage {
      * Allow to specify a fixed number of pages for all text documents. This provides a workaround
      * for LibreOffice 4.0.x on Ubuntu which takes a long time to open documents without statistics.
      * E.g. 40s for 35 pages but only 4s if the page count is 500 pages.
-     * 
+     *
      * @param count page count, negative means remove.
      */
     public static final synchronized void setPageCount(final int count) {
@@ -112,7 +72,7 @@ public class ODPackage {
 
     /**
      * Root element of an OpenDocument document. See section 22.2.1 of v1.2-part1-cd04.
-     * 
+     *
      * @author Sylvain CUAZ
      */
     public static enum RootElement {
@@ -191,7 +151,7 @@ public class ODPackage {
 
         /**
          * The name of the zip entry in the package.
-         * 
+         *
          * @return the path of the file, <code>null</code> if this element shouldn't be in a
          *         package.
          */
@@ -210,7 +170,7 @@ public class ODPackage {
 
     /**
      * Whether the passed entry is specific to a package.
-     * 
+     *
      * @param name a entry name, eg "mimetype"
      * @return <code>true</code> if <code>name</code> is a standard file, eg <code>true</code>.
      */
@@ -221,7 +181,7 @@ public class ODPackage {
 
     /**
      * Create a package from a collection of sub-documents.
-     * 
+     *
      * @param content the content.
      * @param style the styles, can be <code>null</code>.
      * @return a package containing the XML documents.
@@ -243,7 +203,7 @@ public class ODPackage {
 
     /**
      * Read from the input stream into memory and close it.
-     * 
+     *
      * @param ins the package or flat XML.
      * @param name the name, can be <code>null</code>.
      * @return a package containing the document.
@@ -382,7 +342,7 @@ public class ODPackage {
 
     /**
      * Read from the input stream into memory and close it.
-     * 
+     *
      * @param ins the package.
      * @throws IOException if <code>ins</code> couldn't be read.
      */
@@ -471,7 +431,7 @@ public class ODPackage {
     /**
      * The version of this package, <code>null</code> if it cannot be found (eg this package is
      * empty, or contains no xml).
-     * 
+     *
      * @return the version of this package, can be <code>null</code>.
      */
     public final XMLVersion getVersion() {
@@ -484,7 +444,7 @@ public class ODPackage {
 
     /**
      * The type of this package, <code>null</code> if it cannot be found (eg this package is empty).
-     * 
+     *
      * @return the type of this package, can be <code>null</code>.
      */
     public final ContentTypeVersioned getContentType() {
@@ -574,7 +534,7 @@ public class ODPackage {
 
     /**
      * Call {@link Validator#isValid()} on each XML subdocuments.
-     * 
+     *
      * @return all problems indexed by subdocuments names, i.e. empty if all OK, <code>null</code>
      *         if validation couldn't occur.
      */
@@ -664,7 +624,7 @@ public class ODPackage {
 
     /**
      * The XML document where are located the common styles.
-     * 
+     *
      * @return the document where are located styles.
      */
     public final ODXMLDocument getStyles() {
@@ -706,7 +666,7 @@ public class ODPackage {
 
     /**
      * Parse BASIC libraries in this package.
-     * 
+     *
      * @return the BASIC libraries by name.
      */
     public final Map<String, Library> readBasicLibraries() {
@@ -731,7 +691,7 @@ public class ODPackage {
     /**
      * Add the passed libraries to this package. Passed libraries with the same content as existing
      * ones are ignored.
-     * 
+     *
      * @param libraries what to add.
      * @return the actually added libraries.
      * @throws IllegalArgumentException if <code>libraries</code> contains duplicates or if it
@@ -774,7 +734,7 @@ public class ODPackage {
 
     /**
      * Remove the passed libraries.
-     * 
+     *
      * @param libraries which libraries to remove.
      * @return the actually removed libraries.
      */
@@ -794,7 +754,7 @@ public class ODPackage {
 
     /**
      * Parse events for the whole document.
-     * 
+     *
      * @return event listeners by event name.
      */
     public final Map<String, EventListener> readEventListeners() {
@@ -817,7 +777,7 @@ public class ODPackage {
 
     /**
      * Return an XML document.
-     * 
+     *
      * @param xmlEntry the filename, eg "styles.xml".
      * @return the matching document, or <code>null</code> if there's none.
      * @throws JDOMException if error about the XML.
@@ -830,7 +790,7 @@ public class ODPackage {
 
     /**
      * Find the passed automatic or common style referenced from the content.
-     * 
+     *
      * @param desc the family, eg <code>StyleStyleDesc&lt;ParagraphStyle&gt;</code>.
      * @param name the name, eg "P1".
      * @return the corresponding XML element.
@@ -842,7 +802,7 @@ public class ODPackage {
     /**
      * Find the passed automatic or common style. NOTE : <code>referent</code> is needed because
      * there can exist automatic styles with the same name in both "content.xml" and "styles.xml".
-     * 
+     *
      * @param referent the document referencing the style.
      * @param desc the family, eg <code>StyleStyleDesc&lt;ParagraphStyle&gt;</code>.
      * @param name the name, eg "P1".
@@ -886,7 +846,7 @@ public class ODPackage {
     /**
      * Verify that styles referenced by this document are indeed defined. NOTE this method is not
      * perfect : not all problems are detected.
-     * 
+     *
      * @return <code>null</code> if no problem has been found, else a String describing it.
      */
     public final String checkStyles() {
@@ -1064,7 +1024,7 @@ public class ODPackage {
     /**
      * Transform this to use a {@link ODSingleXMLDocument}. Ie after this method, only "content.xml"
      * remains and it's an instance of ODSingleXMLDocument.
-     * 
+     *
      * @return the created ODSingleXMLDocument.
      */
     public ODSingleXMLDocument toSingle() {
@@ -1084,7 +1044,7 @@ public class ODPackage {
      * Split the {@link RootElement#SINGLE_CONTENT}. If this was {@link #isSingle() single} the
      * former {@link #getContent() content} won't be useable anymore, you can check it with
      * {@link ODSingleXMLDocument#isDead()}.
-     * 
+     *
      * @return <code>true</code> if this was modified.
      */
     public final boolean split() {
@@ -1125,7 +1085,7 @@ public class ODPackage {
         if (productInfo == null) {
             // do *not* use "/product.properties" as it might interfere with products using this
             // framework
-            final Properties props = PropertiesUtils.createFromResource(this.getClass(), "product.properties");
+            final Properties props = PropertiesUtils.createFromResource(this.getClass(), "/org/jopendocument/product.properties");
             props.put(ProductInfo.NAME, this.getClass().getName());
             productInfo = new ProductInfo(props);
         }
@@ -1179,7 +1139,7 @@ public class ODPackage {
 
     /**
      * Save the content of this package to our file, overwriting it if it exists.
-     * 
+     *
      * @return the saved file.
      * @throws IOException if an error occurs while saving.
      */
