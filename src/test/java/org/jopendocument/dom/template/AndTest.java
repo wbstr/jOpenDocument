@@ -1,25 +1,25 @@
 package org.jopendocument.dom.template;
 
-import org.jdom.JDOMException;
-import org.jopendocument.dom.ODSingleXMLDocument;
-import org.jopendocument.dom.template.engine.ScriptEngineDataModel;
-import org.junit.*;
-
-import javax.script.ScriptEngineManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import javax.script.ScriptEngineManager;
+import org.jdom.JDOMException;
+import org.jopendocument.dom.ODSingleXMLDocument;
+import org.jopendocument.dom.template.engine.ScriptEngineDataModel;
+import org.junit.*;
 
 /**
  * Created by kumm on 2016.05.19..
  */
 public class AndTest {
+
     @org.junit.Test
     public void testSomeMethod() throws IOException, TemplateException, JDOMException {
-        EngineTemplate parlexEngine = getEngineTemplate("template/and.odt");
-        Map<String,Boolean> dataMap = new HashMap<String,Boolean>();
+        EngineTemplate parlexEngine = getEngineTemplate("and.odt");
+        Map<String, Boolean> dataMap = new HashMap<String, Boolean>();
         dataMap.put("a", Boolean.TRUE);
         dataMap.put("b", Boolean.TRUE);
 
@@ -35,7 +35,8 @@ public class AndTest {
     }
 
     private EngineTemplate getEngineTemplate(String path) throws IOException, TemplateException, JDOMException {
-        File file = new File(path);
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource(path).getFile());
         FileInputStream inputStram = new FileInputStream(file);
         return new EngineTemplate(inputStram, new ScriptEngineDataModel(new ScriptEngineManager().getEngineByName("javascript")));
     }
