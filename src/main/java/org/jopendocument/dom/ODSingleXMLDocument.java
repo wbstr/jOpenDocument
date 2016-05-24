@@ -1,32 +1,19 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- * 
+ *
  * Copyright 2008-2013 jOpenDocument, by ILM Informatique. All rights reserved.
- * 
+ *
  * The contents of this file are subject to the terms of the GNU
- * General Public License Version 3 only ("GPL").  
- * You may not use this file except in compliance with the License. 
+ * General Public License Version 3 only ("GPL").
+ * You may not use this file except in compliance with the License.
  * You can obtain a copy of the License at http://www.gnu.org/licenses/gpl-3.0.html
  * See the License for the specific language governing permissions and limitations under the License.
- * 
+ *
  * When distributing the software, include this License Header Notice in each file.
- * 
+ *
  */
 
 package org.jopendocument.dom;
-
-import static org.jopendocument.dom.ODPackage.RootElement.CONTENT;
-import org.jopendocument.dom.ODPackage.RootElement;
-import org.jopendocument.dom.style.data.DataStyle;
-import org.jopendocument.util.Base64;
-import org.jopendocument.util.CollectionUtils;
-import org.jopendocument.util.FileUtils;
-import org.jopendocument.util.Tuple2;
-import org.jopendocument.util.cc.IPredicate;
-import org.jopendocument.util.JDOMUtils;
-import org.jopendocument.util.SimpleXMLPath;
-import org.jopendocument.util.Step;
-import org.jopendocument.util.Step.Axis;
 
 import java.awt.Point;
 import java.io.File;
@@ -35,31 +22,23 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-
+import java.util.*;
 import org.apache.commons.collections.Transformer;
-import org.jdom.Attribute;
-import org.jdom.Content;
-import org.jdom.DocType;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.Namespace;
+import org.jdom.*;
 import org.jdom.xpath.XPath;
+import org.jopendocument.dom.EventListener;
+import org.jopendocument.dom.Log;
+import org.jopendocument.dom.ODPackage.RootElement;
+import static org.jopendocument.dom.ODPackage.RootElement.CONTENT;
+import org.jopendocument.dom.style.data.DataStyle;
+import org.jopendocument.util.Step.Axis;
+import org.jopendocument.util.*;
+import org.jopendocument.util.cc.IPredicate;
 
 /**
  * An XML document containing all of an office document, see section 2.1 of OpenDocument 1.1.
- * 
+ *
  * @author Sylvain CUAZ 24 nov. 2004
  */
 public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
@@ -211,7 +190,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
      * Slice the body into parts. Since some content have no part (e.g. comment), they can be added
      * to the previous or next range. If <code>overlapping</code> is <code>true</code> they will be
      * added to both, else only to the next range.
-     * 
+     *
      * @param parts parts definition.
      * @param body the element to slice.
      * @param overlapping <code>true</code> if ranges can overlap.
@@ -279,7 +258,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Create a document from a collection of subdocuments.
-     * 
+     *
      * @param content the content.
      * @param style the styles, can be <code>null</code>.
      * @return the merged document.
@@ -358,7 +337,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Create a document from a package.
-     * 
+     *
      * @param f an OpenDocument package file.
      * @return the merged file.
      * @throws JDOMException if the file is not a valid OpenDocument file.
@@ -371,7 +350,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Create a document from a flat XML.
-     * 
+     *
      * @param f an OpenDocument XML file.
      * @return the created file.
      * @throws JDOMException if the file is not a valid OpenDocument file.
@@ -413,7 +392,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     /**
      * A new single document. NOTE: this document will put himself in <code>pkg</code>, replacing
      * any previous content.
-     * 
+     *
      * @param content the XML.
      * @param pkg the package this document belongs to.
      */
@@ -522,7 +501,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * The number of files concatenated with {@link #add(ODSingleXMLDocument)}.
-     * 
+     *
      * @return number of files concatenated.
      */
     public final int getNumero() {
@@ -563,7 +542,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Parse BASIC libraries in this flat XML.
-     * 
+     *
      * @return the BASIC libraries by name.
      */
     public final Map<String, Library> readBasicLibraries() {
@@ -598,7 +577,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Append a document.
-     * 
+     *
      * @param doc the document to add.
      */
     public synchronized void add(ODSingleXMLDocument doc) {
@@ -608,7 +587,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Append a document.
-     * 
+     *
      * @param doc the document to add, <code>null</code> means no-op.
      * @param pageBreak whether a page break should be inserted before <code>doc</code>.
      */
@@ -631,7 +610,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     // after or before a comment) and faster (no filter and adjusted index)
     /**
      * Add the passed document at the specified place.
-     * 
+     *
      * @param where a descendant of the body, <code>null</code> meaning the body itself.
      * @param index the content index inside <code>where</code>, -1 meaning the end.
      * @param doc the document to add, <code>null</code> means no-op.
@@ -657,7 +636,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Merge the four elements of style.
-     * 
+     *
      * @param doc the xml document to merge.
      * @param sameDoc whether <code>doc</code> is the same OpenDocument than this, eg
      *        <code>true</code> when merging content.xml and styles.xml.
@@ -743,7 +722,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     /**
      * Add the passed libraries to this document. Passed libraries with the same content as existing
      * ones are ignored.
-     * 
+     *
      * @param libraries what to add.
      * @return the actually added libraries.
      * @throws IllegalArgumentException if <code>libraries</code> contains duplicates or if it
@@ -800,7 +779,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Remove the passed libraries.
-     * 
+     *
      * @param libraries which libraries to remove.
      * @return the actually removed libraries.
      */
@@ -822,7 +801,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     /**
      * Fusionne les office:font-decls/style:font-decl. On ne préfixe jamais, on ajoute seulement si
      * l'attribut style:name est différent.
-     * 
+     *
      * @param doc le document à fusionner avec celui-ci.
      * @throws JDOMException
      */
@@ -900,7 +879,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Fusionne les office:automatic-styles, on préfixe tout.
-     * 
+     *
      * @param doc le document à fusionner avec celui-ci.
      * @param ref whether to prefix hrefs.
      * @throws JDOMException
@@ -915,7 +894,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     /**
      * Fusionne les office:master-styles. On ne préfixe jamais, on ajoute seulement si l'attribut
      * style:name est différent.
-     * 
+     *
      * @param doc le document à fusionner avec celui-ci.
      * @param ref whether to prefix hrefs.
      * @throws JDOMException if an error occurs.
@@ -927,7 +906,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Fusionne les corps.
-     * 
+     *
      * @param where the element where to add the main content, <code>null</code> meaning at the root
      *        of the body.
      * @param index the content index inside <code>where</code>, -1 meaning at the end.
@@ -999,7 +978,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
                         final int postSize = thisBody.getContentSize();
                         prologueAddedCount += postSize - preSize;
                     } else if (part == ContentPart.MAIN) {
-                        mainElements.add(this.prefix((Element) bodyChild.clone(), true));
+                        mainElements.add((Element) bodyChild.clone());
                     } else if (part == ContentPart.EPILOGUE) {
                         Log.get().fine("Ignoring in " + part + " : " + bodyChild);
                     }
@@ -1024,7 +1003,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Detach the children of elem whose names already exist in the body.
-     * 
+     *
      * @param elem the elem to be trimmed.
      * @throws JDOMException if an error occurs.
      */
@@ -1059,7 +1038,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Préfixe les attributs en ayant besoin.
-     * 
+     *
      * @param elem l'élément à préfixer.
      * @param references whether to prefix hrefs.
      * @return <code>elem</code>.
@@ -1106,7 +1085,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Prefix a path.
-     * 
+     *
      * @param href a path inside the pkg, eg "./Object 1/content.xml".
      * @return the prefixed path or <code>null</code> if href is external, eg "./3_Object
      *         1/content.xml".
@@ -1161,7 +1140,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     /**
      * Ajoute dans ce document seulement les éléments de doc correspondant au XPath spécifié et dont
      * la valeur de l'attribut style:name n'existe pas déjà.
-     * 
+     *
      * @param doc le document à fusionner avec celui-ci.
      * @param topElem eg "office:font-decls".
      * @param elemToMerge les éléments à fusionner (par rapport à topElem), eg "style:font-decl".
@@ -1177,7 +1156,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
      * Ajoute dans ce document seulement les éléments de doc correspondant au XPath spécifié et dont
      * la valeur de l'attribut style:name n'existe pas déjà. En conséquence n'ajoute que les
      * éléments possédant un attribut style:name.
-     * 
+     *
      * @param doc le document à fusionner avec celui-ci.
      * @param topElem eg "office:font-decls".
      * @param elemToMerge les éléments à fusionner (par rapport à topElem), eg "style:font-decl".
@@ -1220,7 +1199,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Ajoute l'élément elemName de doc, s'il n'est pas dans ce document.
-     * 
+     *
      * @param doc le document à fusionner avec celui-ci.
      * @param elemName l'élément à ajouter, eg "outline-style".
      * @throws JDOMException if elemName is not valid.
@@ -1231,7 +1210,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Prefixe les fils de auto-styles possédant un attribut "name" avant de les ajouter.
-     * 
+     *
      * @param doc le document à fusionner avec celui-ci.
      * @return les élément ayant été ajoutés.
      * @throws JDOMException
@@ -1263,7 +1242,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Return <code>true</code> if this document was split.
-     * 
+     *
      * @return <code>true</code> if this has no package anymore.
      * @see ODPackage#split()
      */
@@ -1366,7 +1345,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     /**
      * Saves this OO document to a file.
-     * 
+     *
      * @param f the file where this document will be saved, without extension, eg "dir/myfile".
      * @return the actual file where it has been saved (with extension), eg "dir/myfile.odt".
      * @throws IOException if an error occurs.

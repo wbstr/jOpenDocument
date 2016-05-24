@@ -5,10 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.script.ScriptEngineManager;
 import org.jdom.JDOMException;
 import org.jopendocument.dom.ODSingleXMLDocument;
-import org.jopendocument.dom.template.engine.ScriptEngineDataModel;
 import org.junit.*;
 
 /**
@@ -38,7 +36,7 @@ public class AndTest {
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource(path).getFile());
         FileInputStream inputStram = new FileInputStream(file);
-        return new EngineTemplate(inputStram, new ScriptEngineDataModel(new ScriptEngineManager().getEngineByName("javascript")));
+        return new JavaScriptEngineTemplate(inputStram);
     }
 
 }
