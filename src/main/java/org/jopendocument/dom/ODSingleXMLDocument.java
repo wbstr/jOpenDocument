@@ -12,7 +12,6 @@
  * When distributing the software, include this License Header Notice in each file.
  *
  */
-
 package org.jopendocument.dom;
 
 import java.awt.Point;
@@ -22,8 +21,8 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map.Entry;
 import java.util.*;
+import java.util.Map.Entry;
 import org.apache.commons.collections.Transformer;
 import org.jdom.*;
 import org.jdom.xpath.XPath;
@@ -32,18 +31,20 @@ import org.jopendocument.dom.Log;
 import org.jopendocument.dom.ODPackage.RootElement;
 import static org.jopendocument.dom.ODPackage.RootElement.CONTENT;
 import org.jopendocument.dom.style.data.DataStyle;
-import org.jopendocument.util.Step.Axis;
 import org.jopendocument.util.*;
+import org.jopendocument.util.Step.Axis;
 import org.jopendocument.util.cc.IPredicate;
 
 /**
- * An XML document containing all of an office document, see section 2.1 of OpenDocument 1.1.
+ * An XML document containing all of an office document, see section 2.1 of
+ * OpenDocument 1.1.
  *
  * @author Sylvain CUAZ 24 nov. 2004
  */
 public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     static private enum ContentPart {
+
         PROLOGUE, MAIN, EPILOGUE
     }
 
@@ -56,6 +57,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     final static Set<String> DONT_PREFIX;
     static private final Map<XMLVersion, List<Set<Element>>> ELEMS_ORDER;
     static private final Map<XMLVersion, Map<Tuple2<Namespace, String>, ContentPart>> ELEMS_PARTS;
+
     static {
         DONT_PREFIX = new HashSet<String>();
         // don't touch to user fields and variables
@@ -65,6 +67,14 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         DONT_PREFIX.add("variable-get");
         DONT_PREFIX.add("variable-decl");
         DONT_PREFIX.add("variable-set");
+
+        // don't touch to cross reference markers
+        DONT_PREFIX.add("reference-mark");
+        DONT_PREFIX.add("reference-mark-start");
+        DONT_PREFIX.add("reference-mark-end");
+
+        // don't touch to cross reference
+        DONT_PREFIX.add("reference-ref");
 
         final XMLVersion[] versions = XMLVersion.values();
         ELEMS_ORDER = new HashMap<XMLVersion, List<Set<Element>>>(versions.length);
@@ -84,8 +94,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
                     assert beforeNull : "more than one null";
                     beforeNull = false;
                 } else {
-                    for (final Element elem : s)
+                    for (final Element elem : s) {
                         m.put(Tuple2.create(elem.getNamespace(), elem.getName()), beforeNull ? ContentPart.PROLOGUE : ContentPart.EPILOGUE);
+                    }
                 }
             }
             ELEMS_PARTS.put(v, m);
@@ -97,17 +108,19 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         final Namespace tableNS = v.getTABLE();
         final List<Set<Element>> res = new ArrayList<Set<Element>>(24);
 
-        if (t == null || t == ContentType.TEXT)
+        if (t == null || t == ContentType.TEXT) {
             res.add(Collections.singleton(new Element("forms", v.getOFFICE())));
+        }
         // first only for text, second only for spreadsheet
         final Element textTrackedChanges = new Element("tracked-changes", textNS);
         final Element tableTrackedChanges = new Element("tracked-changes", tableNS);
-        if (t == null)
+        if (t == null) {
             res.add(CollectionUtils.createSet(textTrackedChanges, tableTrackedChanges));
-        else if (t == ContentType.TEXT)
+        } else if (t == ContentType.TEXT) {
             res.add(Collections.singleton(textTrackedChanges));
-        else if (t == ContentType.SPREADSHEET)
+        } else if (t == ContentType.SPREADSHEET) {
             res.add(Collections.singleton(tableTrackedChanges));
+        }
 
         // text-decls
         res.add(Collections.singleton(new Element("variable-decls", textNS)));
@@ -149,12 +162,14 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     // return null if not an element
     // return the part the element is in (assume MAIN for unknown elements)
     static private ContentPart getPart(final Map<Tuple2<Namespace, String>, ContentPart> parts, final Content bodyContent) {
-        if (!(bodyContent instanceof Element))
+        if (!(bodyContent instanceof Element)) {
             return null;
+        }
         final Element elem = (Element) bodyContent;
         ContentPart res = parts.get(Tuple2.create(elem.getNamespace(), elem.getName()));
-        if (res == null)
+        if (res == null) {
             res = parts.get(null);
+        }
         assert res != null;
         return res;
     }
@@ -183,26 +198,28 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         }
         final int lastNullsStart = contentPart == null || contentPart == ContentPart.EPILOGUE ? thisChildrenIter.nextIndex() : thisChildrenIter.nextIndex() + 1;
         final int lastNullsEnd = nullsStartIndex < 0 ? lastNullsStart : nullsStartIndex + 1;
-        return new int[] { lastNullsStart, lastNullsEnd };
+        return new int[]{lastNullsStart, lastNullsEnd};
     }
 
     /**
-     * Slice the body into parts. Since some content have no part (e.g. comment), they can be added
-     * to the previous or next range. If <code>overlapping</code> is <code>true</code> they will be
-     * added to both, else only to the next range.
+     * Slice the body into parts. Since some content have no part (e.g.
+     * comment), they can be added to the previous or next range. If
+     * <code>overlapping</code> is <code>true</code> they will be added to both,
+     * else only to the next range.
      *
      * @param parts parts definition.
      * @param body the element to slice.
      * @param overlapping <code>true</code> if ranges can overlap.
-     * @return the start (inclusive, {@link Point#x}) and end (exclusive, {@link Point#y}) for each
-     *         {@link ContentPart}.
+     * @return the start (inclusive, {@link Point#x}) and end (exclusive,
+     * {@link Point#y}) for each {@link ContentPart}.
      */
     static private Point[] getBounds(final Map<Tuple2<Namespace, String>, ContentPart> parts, final Element body, final boolean overlapping) {
         @SuppressWarnings("unchecked")
         final List<Content> content = body.getContent();
         final int contentSize = content.size();
-        if (contentSize == 0)
-            return new Point[] { new Point(0, 0), new Point(0, 0), new Point(0, 0) };
+        if (contentSize == 0) {
+            return new Point[]{new Point(0, 0), new Point(0, 0), new Point(0, 0)};
+        }
 
         // start from the beginning until we leave the prologue
         ContentPart contentPart = null;
@@ -231,7 +248,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         final int epilogueStart = lastNullsStart;
         final int mainEnd = overlapping ? lastNullsEnd : lastNullsStart;
 
-        final Point[] res = new Point[] { new Point(prologueStart, prologueStop), new Point(mainStart, mainEnd), new Point(epilogueStart, epilogueEnd) };
+        final Point[] res = new Point[]{new Point(prologueStart, prologueStop), new Point(mainStart, mainEnd), new Point(epilogueStart, epilogueEnd)};
         assert res.length == ContentPart.values().length;
         return res;
     }
@@ -242,12 +259,14 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         final Point mainBounds = bounds[ContentPart.MAIN.ordinal()];
 
         final int mainEnd = mainBounds.y;
-        if (index < 0 || index > mainEnd)
+        if (index < 0 || index > mainEnd) {
             return mainEnd;
+        }
 
         final int mainStart = mainBounds.x;
-        if (index < mainStart)
+        if (index < mainStart) {
             return mainStart;
+        }
 
         return index;
     }
@@ -255,7 +274,6 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     // Voir le TODO du ctor
     // public static OOSingleXMLDocument createEmpty() {
     // }
-
     /**
      * Create a document from a collection of subdocuments.
      *
@@ -281,8 +299,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         prependToRoot(files.getDocument(RootElement.SETTINGS.getZipEntry()), root);
         prependToRoot(files.getDocument(RootElement.META.getZipEntry()), root);
         final ODSingleXMLDocument single = new ODSingleXMLDocument(singleContent, files);
-        if (single.getChild("body") == null)
+        if (single.getChild("body") == null) {
             throw new IllegalArgumentException("no body in " + single);
+        }
         if (style != null) {
             // section 2.1 : Styles used in the document content and automatic styles used in the
             // styles themselves.
@@ -367,19 +386,28 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     }
 
     /**
-     * fix bug when a SingleXMLDoc is used to create a document (for example with P2 and 1_P2), and
-     * then create another instance s2 with the previous document and add a second file (also with
-     * P2 and 1_P2) => s2 will contain P2, 1_P2, 1_P2, 1_1_P2.
+     * fix bug when a SingleXMLDoc is used to create a document (for example
+     * with P2 and 1_P2), and then create another instance s2 with the previous
+     * document and add a second file (also with P2 and 1_P2) => s2 will contain
+     * P2, 1_P2, 1_P2, 1_1_P2.
      */
     private static final String COUNT = "SingleXMLDocument_count";
 
-    /** Le nombre de fichiers concat */
+    /**
+     * Le nombre de fichiers concat
+     */
     private int numero;
-    /** Les styles présent dans ce document */
+    /**
+     * Les styles présent dans ce document
+     */
     private final Set<String> stylesNames;
-    /** Les styles de liste présent dans ce document */
+    /**
+     * Les styles de liste présent dans ce document
+     */
     private final Set<String> listStylesNames;
-    /** Les fichiers référencés par ce document */
+    /**
+     * Les fichiers référencés par ce document
+     */
     private ODPackage pkg;
     private final ODMeta meta;
     // the element between each page
@@ -390,8 +418,8 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     }
 
     /**
-     * A new single document. NOTE: this document will put himself in <code>pkg</code>, replacing
-     * any previous content.
+     * A new single document. NOTE: this document will put himself in
+     * <code>pkg</code>, replacing any previous content.
      *
      * @param content the XML.
      * @param pkg the package this document belongs to.
@@ -406,11 +434,13 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         this.pkg = contentIsFlat ? new ODPackage() : pkg;
         if (!contentIsFlat) {
             final Set<String> toRm = new HashSet<String>();
-            for (final RootElement e : RootElement.getPackageElements())
+            for (final RootElement e : RootElement.getPackageElements()) {
                 toRm.add(e.getZipEntry());
+            }
             for (final String e : this.pkg.getEntries()) {
-                if (e.startsWith(Library.DIR_NAME))
+                if (e.startsWith(Library.DIR_NAME)) {
                     toRm.add(e);
+                }
             }
             this.pkg.rmFiles(toRm);
         }
@@ -421,8 +451,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
             // OD thinks of the ZIP archive as an additional folder
             for (final Attribute hrefAttr : ALL_HREF_ATTRIBUTES.selectNodes(getDocument().getRootElement())) {
                 final String href = hrefAttr.getValue();
-                if (!URI.create(href).isAbsolute())
+                if (!URI.create(href).isAbsolute()) {
                     hrefAttr.setValue("../" + href);
+                }
             }
         }
         // decode Base64 binaries
@@ -431,8 +462,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
             int i = 1;
             final Set<String> entries = getPackage().getEntries();
             final Element binaryParentElement = binaryDataElem.getParentElement();
-            while (entries.contains(binaryParentElement.getName() + "/" + i))
+            while (entries.contains(binaryParentElement.getName() + "/" + i)) {
                 i++;
+            }
             name = binaryParentElement.getName() + "/" + i;
             getPackage().putFile(name, Base64.decode(binaryDataElem.getText()));
             binaryParentElement.setAttribute("href", name, binaryDataElem.getNamespace("xlink"));
@@ -479,8 +511,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
 
     ODSingleXMLDocument(ODSingleXMLDocument doc, ODPackage p) {
         super(doc);
-        if (p == null)
+        if (p == null) {
             throw new NullPointerException("Null package");
+        }
         this.stylesNames = new HashSet<String>(doc.stylesNames);
         this.listStylesNames = new HashSet<String>(doc.listStylesNames);
         this.pkg = p;
@@ -520,15 +553,17 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         final OOXML xml = getXML();
         final String officeScripts = xml.getOfficeScripts();
         final Element scriptsElem = this.getChild(officeScripts, create);
-        if (scriptsElem == null)
+        if (scriptsElem == null) {
             return null;
+        }
         final Namespace scriptNS = this.getVersion().getNS("script");
         final Namespace officeNS = this.getVersion().getOFFICE();
         @SuppressWarnings("unchecked")
         final List<Element> scriptElems = scriptsElem.getChildren(xml.getOfficeScript(), officeNS);
         for (final Element scriptElem : scriptElems) {
-            if (scriptElem.getAttributeValue("language", scriptNS).equals(BASIC_LANG_NAME))
+            if (scriptElem.getAttributeValue("language", scriptNS).equals(BASIC_LANG_NAME)) {
                 return scriptElem;
+            }
         }
         if (create) {
             final Element res = new Element(xml.getOfficeScript(), officeNS);
@@ -550,8 +585,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     }
 
     private final Tuple2<Map<String, Library>, Map<String, Element>> readBasicLibraries(final Element scriptElem) {
-        if (scriptElem == null)
-            return Tuple2.create(Collections.<String, Library> emptyMap(), Collections.<String, Element> emptyMap());
+        if (scriptElem == null) {
+            return Tuple2.create(Collections.<String, Library>emptyMap(), Collections.<String, Element>emptyMap());
+        }
 
         final Namespace libNS = this.getVersion().getLibrariesNS();
         final Namespace linkNS = this.getVersion().getNS("xlink");
@@ -565,8 +601,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
             for (final Element libElem : libElems) {
                 final Library library = Library.fromFlatXML(libElem, this.getPackage(), linkNS);
                 if (library != null) {
-                    if (res.put(library.getName(), library) != null)
+                    if (res.put(library.getName(), library) != null) {
                         throw new IllegalStateException("Duplicate library named " + library.getName());
+                    }
                     resElems.put(library.getName(), libElem);
                 }
             }
@@ -589,7 +626,8 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
      * Append a document.
      *
      * @param doc the document to add, <code>null</code> means no-op.
-     * @param pageBreak whether a page break should be inserted before <code>doc</code>.
+     * @param pageBreak whether a page break should be inserted before
+     * <code>doc</code>.
      */
     public synchronized void add(ODSingleXMLDocument doc, boolean pageBreak) {
         if (doc != null && pageBreak) {
@@ -611,15 +649,19 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     /**
      * Add the passed document at the specified place.
      *
-     * @param where a descendant of the body, <code>null</code> meaning the body itself.
-     * @param index the content index inside <code>where</code>, -1 meaning the end.
+     * @param where a descendant of the body, <code>null</code> meaning the body
+     * itself.
+     * @param index the content index inside <code>where</code>, -1 meaning the
+     * end.
      * @param doc the document to add, <code>null</code> means no-op.
      */
     public synchronized void add(Element where, int index, ODSingleXMLDocument doc) {
-        if (doc == null)
+        if (doc == null) {
             return;
-        if (!this.getVersion().equals(doc.getVersion()))
+        }
+        if (!this.getVersion().equals(doc.getVersion())) {
             throw new IllegalArgumentException("version mismatch");
+        }
 
         this.setNumero(this.numero + 1);
         try {
@@ -638,8 +680,8 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
      * Merge the four elements of style.
      *
      * @param doc the xml document to merge.
-     * @param sameDoc whether <code>doc</code> is the same OpenDocument than this, eg
-     *        <code>true</code> when merging content.xml and styles.xml.
+     * @param sameDoc whether <code>doc</code> is the same OpenDocument than
+     * this, eg <code>true</code> when merging content.xml and styles.xml.
      * @throws JDOMException if an error occurs.
      */
     private void mergeAllStyles(ODXMLDocument doc, boolean sameDoc) throws JDOMException {
@@ -720,13 +762,13 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     }
 
     /**
-     * Add the passed libraries to this document. Passed libraries with the same content as existing
-     * ones are ignored.
+     * Add the passed libraries to this document. Passed libraries with the same
+     * content as existing ones are ignored.
      *
      * @param libraries what to add.
      * @return the actually added libraries.
-     * @throws IllegalArgumentException if <code>libraries</code> contains duplicates or if it
-     *         cannot be merged into this.
+     * @throws IllegalArgumentException if <code>libraries</code> contains
+     * duplicates or if it cannot be merged into this.
      * @see Library#canBeMerged(Library)
      */
     public final Set<String> addBasicLibraries(final Collection<? extends Library> libraries) {
@@ -734,14 +776,16 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     }
 
     public final Set<String> addBasicLibraries(final ODPackage pkg) {
-        if (pkg == this.pkg)
+        if (pkg == this.pkg) {
             return Collections.emptySet();
+        }
         return this.addBasicLibraries(pkg.readBasicLibraries());
     }
 
     final Set<String> addBasicLibraries(final Map<String, Library> oLibraries) {
-        if (oLibraries.size() == 0)
+        if (oLibraries.size() == 0) {
             return Collections.emptySet();
+        }
 
         final Tuple2<Map<String, Library>, Map<String, Element>> thisLibrariesAndElements = this.readBasicLibraries(this.getBasicScriptElem(false));
         final Map<String, Library> thisLibraries = thisLibrariesAndElements.get0();
@@ -762,8 +806,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         if (newLibs.size() > 0) {
             final Element thisScriptElem = this.getBasicScriptElem(true);
             final Element librariesElem = JDOMUtils.getOrCreateChild(thisScriptElem, "libraries", this.getVersion().getLibrariesNS());
-            for (final String newLib : newLibs)
+            for (final String newLib : newLibs) {
                 librariesElem.addContent(oLibraries.get(newLib).toFlatXML(this.getFormatVersion()));
+            }
         }
 
         // merge dialogs
@@ -792,15 +837,16 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
                 elemToRm.detach();
                 res.add(libToRm);
             }
-            if (Library.removeFromPackage(this.getPackage(), libToRm))
+            if (Library.removeFromPackage(this.getPackage(), libToRm)) {
                 res.add(libToRm);
+            }
         }
         return res;
     }
 
     /**
-     * Fusionne les office:font-decls/style:font-decl. On ne préfixe jamais, on ajoute seulement si
-     * l'attribut style:name est différent.
+     * Fusionne les office:font-decls/style:font-decl. On ne préfixe jamais, on
+     * ajoute seulement si l'attribut style:name est différent.
      *
      * @param doc le document à fusionner avec celui-ci.
      * @throws JDOMException
@@ -829,6 +875,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         final boolean prefixDataStyles = !sameDoc;
         final List<Element> addedDataStyles = this.addStyles(doc, "styles", Step.createElementStep(null, dsNS, new IPredicate<Element>() {
             private final Set<String> names;
+
             {
                 this.names = new HashSet<String>(DataStyle.DATA_STYLES.size());
                 for (final Class<? extends DataStyle> cl : DataStyle.DATA_STYLES) {
@@ -856,8 +903,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
             @Override
             public Element transform(Element elem) throws JDOMException {
                 final Attribute attr = elem.getAttribute("data-style-name", elem.getNamespace());
-                if (attr != null)
+                if (attr != null) {
                     attr.setValue(prefix(attr.getValue()));
+                }
                 return elem;
             }
         }));
@@ -892,8 +940,8 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     }
 
     /**
-     * Fusionne les office:master-styles. On ne préfixe jamais, on ajoute seulement si l'attribut
-     * style:name est différent.
+     * Fusionne les office:master-styles. On ne préfixe jamais, on ajoute
+     * seulement si l'attribut style:name est différent.
      *
      * @param doc le document à fusionner avec celui-ci.
      * @param ref whether to prefix hrefs.
@@ -907,9 +955,10 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     /**
      * Fusionne les corps.
      *
-     * @param where the element where to add the main content, <code>null</code> meaning at the root
-     *        of the body.
-     * @param index the content index inside <code>where</code>, -1 meaning at the end.
+     * @param where the element where to add the main content, <code>null</code>
+     * meaning at the root of the body.
+     * @param index the content index inside <code>where</code>, -1 meaning at
+     * the end.
      * @param doc le document à fusionner avec celui-ci.
      * @throws JDOMException
      */
@@ -931,11 +980,13 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
                     return input.getParent() == thisBody;
                 }
             });
-            if (movedChild == null)
+            if (movedChild == null) {
                 throw new IllegalStateException("not adding in body : " + nonNullWhere);
+            }
             final ContentPart contentPart = getPart(parts, movedChild);
-            if (contentPart != ContentPart.MAIN)
+            if (contentPart != ContentPart.MAIN) {
                 throw new IllegalStateException("not adding in main : " + contentPart + " ; " + nonNullWhere);
+            }
         }
 
         final ChildCreator childCreator = ChildCreator.createFromSets(thisBody, ELEMS_ORDER.get(getVersion()));
@@ -978,7 +1029,7 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
                         final int postSize = thisBody.getContentSize();
                         prologueAddedCount += postSize - preSize;
                     } else if (part == ContentPart.MAIN) {
-                        mainElements.add((Element) bodyChild.clone());
+                        mainElements.add(this.prefix((Element) bodyChild.clone(), true));
                     } else if (part == ContentPart.EPILOGUE) {
                         Log.get().fine("Ignoring in " + part + " : " + bodyChild);
                     }
@@ -995,10 +1046,11 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
             index += prologueAddedCount;
             assert index >= 0 && index <= thisBody.getContentSize();
         }
-        if (index < 0)
+        if (index < 0) {
             nonNullWhere.addContent(mainElements);
-        else
+        } else {
             nonNullWhere.addContent(index, mainElements);
+        }
     }
 
     /**
@@ -1027,7 +1079,6 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     }
 
     // *** Utils
-
     public final Element getBody() {
         return this.getContentTypeVersioned().getBody(getDocument());
     }
@@ -1066,8 +1117,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         while (attrs.hasNext()) {
             final Attribute attr = (Attribute) attrs.next();
             final String parentName = attr.getParent().getName();
-            if (!DONT_PREFIX.contains(parentName))
+            if (!DONT_PREFIX.contains(parentName)) {
                 attr.setValue(this.prefix(attr.getValue()));
+            }
         }
 
         // prefix references
@@ -1076,8 +1128,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
             while (attrs.hasNext()) {
                 final Attribute attr = (Attribute) attrs.next();
                 final String prefixedPath = this.prefixPath(attr.getValue());
-                if (prefixedPath != null)
+                if (prefixedPath != null) {
                     attr.setValue(prefixedPath);
+                }
             }
         }
         return elem;
@@ -1087,19 +1140,20 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
      * Prefix a path.
      *
      * @param href a path inside the pkg, eg "./Object 1/content.xml".
-     * @return the prefixed path or <code>null</code> if href is external, eg "./3_Object
-     *         1/content.xml".
+     * @return the prefixed path or <code>null</code> if href is external, eg
+     * "./3_Object 1/content.xml".
      */
     private String prefixPath(final String href) {
         if (this.getVersion().equals(XMLVersion.OOo)) {
             // in OOo 1.x inPKG is denoted by a #
             final boolean sharp = href.startsWith("#");
-            if (sharp)
-                // eg #Pictures/100000000000006C000000ABCC02339E.png
+            if (sharp) // eg #Pictures/100000000000006C000000ABCC02339E.png
+            {
                 return "#" + this.prefix(href.substring(1));
-            else
-                // eg ../../../../Program%20Files/OpenOffice.org1.1.5/share/gallery/apples.gif
+            } else // eg ../../../../Program%20Files/OpenOffice.org1.1.5/share/gallery/apples.gif
+            {
                 return null;
+            }
         } else {
             URI uri;
             try {
@@ -1112,12 +1166,14 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
             final boolean inPKGFile = uri == null || uri.getScheme() == null && uri.getAuthority() == null && uri.getPath().charAt(0) != '/';
             if (inPKGFile) {
                 final String dotSlash = "./";
-                if (href.startsWith(dotSlash))
+                if (href.startsWith(dotSlash)) {
                     return dotSlash + this.prefix(href.substring(dotSlash.length()));
-                else
+                } else {
                     return this.prefix(href);
-            } else
+                }
+            } else {
                 return null;
+            }
         }
     }
 
@@ -1138,28 +1194,33 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     };
 
     /**
-     * Ajoute dans ce document seulement les éléments de doc correspondant au XPath spécifié et dont
-     * la valeur de l'attribut style:name n'existe pas déjà.
+     * Ajoute dans ce document seulement les éléments de doc correspondant au
+     * XPath spécifié et dont la valeur de l'attribut style:name n'existe pas
+     * déjà.
      *
      * @param doc le document à fusionner avec celui-ci.
      * @param topElem eg "office:font-decls".
-     * @param elemToMerge les éléments à fusionner (par rapport à topElem), eg "style:font-decl".
+     * @param elemToMerge les éléments à fusionner (par rapport à topElem), eg
+     * "style:font-decl".
      * @return les noms des éléments ajoutés.
      * @throws JDOMException
-     * @see #mergeUnique(ODSingleXMLDocument, String, String, ElementTransformer)
+     * @see #mergeUnique(ODSingleXMLDocument, String, String,
+     * ElementTransformer)
      */
     private List<String> mergeUnique(ODXMLDocument doc, String topElem, String elemToMerge) throws JDOMException {
         return this.mergeUnique(doc, topElem, elemToMerge, NOP_ElementTransformer);
     }
 
     /**
-     * Ajoute dans ce document seulement les éléments de doc correspondant au XPath spécifié et dont
-     * la valeur de l'attribut style:name n'existe pas déjà. En conséquence n'ajoute que les
-     * éléments possédant un attribut style:name.
+     * Ajoute dans ce document seulement les éléments de doc correspondant au
+     * XPath spécifié et dont la valeur de l'attribut style:name n'existe pas
+     * déjà. En conséquence n'ajoute que les éléments possédant un attribut
+     * style:name.
      *
      * @param doc le document à fusionner avec celui-ci.
      * @param topElem eg "office:font-decls".
-     * @param elemToMerge les éléments à fusionner (par rapport à topElem), eg "style:font-decl".
+     * @param elemToMerge les éléments à fusionner (par rapport à topElem), eg
+     * "style:font-decl".
      * @param addTransf la transformation à appliquer avant d'ajouter.
      * @return les noms des éléments ajoutés.
      * @throws JDOMException
@@ -1209,7 +1270,8 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     }
 
     /**
-     * Prefixe les fils de auto-styles possédant un attribut "name" avant de les ajouter.
+     * Prefixe les fils de auto-styles possédant un attribut "name" avant de les
+     * ajouter.
      *
      * @param doc le document à fusionner avec celui-ci.
      * @return les élément ayant été ajoutés.
@@ -1222,8 +1284,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     // add styles from doc/rootElem/styleElemStep/@style:name, optionally prefixing
     private List<Element> addStyles(ODXMLDocument doc, final String rootElem, final Step<Element> styleElemStep, boolean prefix) throws JDOMException {
         // needed since we add to us directly under rootElem
-        if (styleElemStep.getAxis() != Axis.child)
+        if (styleElemStep.getAxis() != Axis.child) {
             throw new IllegalArgumentException("Not child axis : " + styleElemStep.getAxis());
+        }
         final List<Element> result = new ArrayList<Element>(128);
         final Element thisChild = this.getChild(rootElem);
         // find all elements with a style:name in doc
@@ -1231,8 +1294,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
         for (final Attribute attr : simplePath.selectNodes(doc.getChild(rootElem))) {
             final Element parent = (Element) attr.getParent().clone();
             // prefix their name
-            if (prefix)
+            if (prefix) {
                 parent.setAttribute(attr.getName(), this.prefix(attr.getValue()), attr.getNamespace());
+            }
             // and add to us
             thisChild.addContent(parent);
             result.add(parent);
@@ -1309,8 +1373,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
             final SimpleXMLPath<Attribute> descAttrs = SimpleXMLPath.create(Step.createElementStep(Axis.descendantOrSelf, null), Step.createAttributeStep(null, null));
             for (final Attribute attr : descAttrs.selectNodes(masterStyles)) {
                 final Element referencedStyleElement = Style.getReferencedStyleElement(this.pkg, attr);
-                if (referencedStyleElement != null)
+                if (referencedStyleElement != null) {
                     referenced.add(referencedStyleElement);
+                }
             }
             for (final Element r : referenced) {
                 // since we already removed common styles
@@ -1346,8 +1411,10 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
     /**
      * Saves this OO document to a file.
      *
-     * @param f the file where this document will be saved, without extension, eg "dir/myfile".
-     * @return the actual file where it has been saved (with extension), eg "dir/myfile.odt".
+     * @param f the file where this document will be saved, without extension,
+     * eg "dir/myfile".
+     * @return the actual file where it has been saved (with extension), eg
+     * "dir/myfile.odt".
      * @throws IOException if an error occurs.
      */
     public File saveToPackageAs(File f) throws IOException {
@@ -1368,8 +1435,9 @@ public class ODSingleXMLDocument extends ODXMLDocument implements Cloneable {
             } else if (!URI.create(href).isAbsolute()) {
                 // encode binaries
                 final Element hrefParent = hrefAttr.getParent();
-                if (!BINARY_DATA_PARENTS.contains(hrefParent.getQualifiedName()))
+                if (!BINARY_DATA_PARENTS.contains(hrefParent.getQualifiedName())) {
                     throw new IllegalStateException("Cannot convert to binary data element : " + hrefParent);
+                }
                 final Element binaryData = new Element("binary-data", getPackage().getVersion().getOFFICE());
 
                 binaryData.setText(Base64.encodeBytes(getPackage().getBinaryFile(href)));
