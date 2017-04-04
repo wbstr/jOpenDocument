@@ -15,6 +15,18 @@
 
 package org.jopendocument.dom.spreadsheet;
 
+import java.awt.Point;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import javax.swing.table.TableModel;
+import org.jdom.Attribute;
+import org.jdom.Element;
 import org.jopendocument.dom.LengthUnit;
 import org.jopendocument.dom.ODDocument;
 import org.jopendocument.dom.Style;
@@ -25,24 +37,9 @@ import org.jopendocument.dom.XMLVersion;
 import org.jopendocument.dom.spreadsheet.CellStyle.StyleTableCellProperties;
 import org.jopendocument.dom.spreadsheet.SheetTableModel.MutableTableModel;
 import org.jopendocument.util.CollectionUtils;
-import org.jopendocument.util.Tuple2;
 import org.jopendocument.util.JDOMUtils;
 import org.jopendocument.util.SimpleXMLPath;
-
-import java.awt.Point;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-
-import javax.swing.table.TableModel;
-
-import org.jdom.Attribute;
-import org.jdom.Element;
+import org.jopendocument.util.Tuple2;
 
 /**
  * A single sheet in a spreadsheet.
@@ -611,7 +608,7 @@ public class Table<D extends ODDocument> extends TableCalcNode<TableStyle, D> {
 
     // *** get count
 
-    final Row<D> getRow(int index) {
+    public final Row<D> getRow(int index) {
         return this.rows.get(index);
     }
 
