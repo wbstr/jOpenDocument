@@ -13,17 +13,13 @@
  * 
  */
 
-/*
+ /*
  * Créé le 28 oct. 2004
  */
 package org.jopendocument.dom;
 
-import org.jopendocument.dom.ODPackage.RootElement;
-import org.jopendocument.util.cc.IFactory;
-import org.jopendocument.util.JDOMUtils;
-import org.jopendocument.util.Validator;
-import org.jopendocument.util.XPathUtils;
-
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,13 +27,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.jdom.Content;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.Namespace;
 import org.jdom.xpath.XPath;
+import org.jopendocument.dom.ODPackage.RootElement;
+import org.jopendocument.util.JDOMUtils;
+import org.jopendocument.util.Validator;
+import org.jopendocument.util.XPathUtils;
+import org.jopendocument.util.cc.IFactory;
 
 /**
  * An OpenDocument XML document, like content.xml ou styles.xml.
@@ -46,11 +46,14 @@ import org.jdom.xpath.XPath;
  */
 public class ODXMLDocument {
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     /**
      * All top-level elements that an office document may contain. Note that only the single xml
      * representation (office:document) contains all of them.
      */
     private static final Map<XMLVersion, List<Element>> ELEMS_ORDER;
+
     static {
         ELEMS_ORDER = new HashMap<XMLVersion, List<Element>>(2);
         ELEMS_ORDER.put(XMLVersion.getOOo(), createChildren(XMLVersion.getOOo()));
@@ -74,6 +77,7 @@ public class ODXMLDocument {
 
     // namespaces for the name attributes
     static private final Map<String, String> namePrefixes;
+
     static {
         namePrefixes = new HashMap<String, String>();
         namePrefixes.put("table:table", "table");
@@ -94,10 +98,11 @@ public class ODXMLDocument {
     }
 
     public static final ODXMLDocument create(final Document doc) {
-        if (RootElement.fromDocument(doc) == RootElement.SINGLE_CONTENT)
+        if (RootElement.fromDocument(doc) == RootElement.SINGLE_CONTENT) {
             return new ODSingleXMLDocument(doc);
-        else
+        } else {
             return new ODXMLDocument(doc);
+        }
     }
 
     private final Document content;
@@ -107,8 +112,9 @@ public class ODXMLDocument {
     // before making it public, assure that content is really of version "version"
     // eg by checking some namespace
     protected ODXMLDocument(final Document content, final XMLFormatVersion version) {
-        if (content == null)
+        if (content == null) {
             throw new NullPointerException("null document");
+        }
         this.content = content;
         this.version = version;
         this.childCreator = new ChildCreator(this.content.getRootElement(), ELEMS_ORDER.get(this.getVersion()));
@@ -143,7 +149,6 @@ public class ODXMLDocument {
     }
 
     // *** children
-
     public final Element getChild(String childName) {
         return this.getChild(childName, false);
     }
@@ -161,13 +166,13 @@ public class ODXMLDocument {
     }
 
     public void setChild(Element elem) {
-        if (!elem.getNamespace().equals(this.getVersion().getOFFICE()))
+        if (!elem.getNamespace().equals(this.getVersion().getOFFICE())) {
             throw new IllegalArgumentException("all children of a document belong to the office namespace.");
+        }
         this.childCreator.setChild(elem);
     }
 
     // *** descendants
-
     protected final Element getDescendant(String path) throws JDOMException {
         return this.getDescendant(path, false);
     }
@@ -202,10 +207,12 @@ public class ODXMLDocument {
     }
 
     public final Element getDescendantByName(Element root, String qName, String name) {
-        if (root.getDocument() != this.getDocument())
+        if (root.getDocument() != this.getDocument()) {
             throw new IllegalArgumentException("root is not part of this.");
-        if (!namePrefixes.containsKey(qName))
+        }
+        if (!namePrefixes.containsKey(qName)) {
             throw new IllegalArgumentException(qName + " not in " + getNamedElements());
+        }
         final String xp = ".//" + qName + "[@" + namePrefixes.get(qName) + ":name='" + name + "']";
         try {
             return (Element) this.getXPath(xp).selectSingleNode(root);
@@ -270,8 +277,9 @@ public class ODXMLDocument {
     }
 
     private final Element findStyleChild(final Element styles, final Namespace elemNS, final String elemName, final String family, final String name) {
-        if (styles == null)
+        if (styles == null) {
             return null;
+        }
 
         final Namespace styleNS = getVersion().getSTYLE();
         // from JDOM : traversal through the List is best done with a Iterator
@@ -294,13 +302,14 @@ public class ODXMLDocument {
      * @see Style#getStyleDesc(Class, XMLVersion)
      */
     public final String findUnusedName(final StyleDesc<?> desc, final String baseName) {
-        for (int i = 0; i < 1000; i++) {
-            final String name = baseName + i;
-            final Element elem = this.getStyle(desc, name);
-            if (elem == null)
-                return name;
+        while (true) {
+            String hash = new BigInteger(130, RANDOM).toString(36).substring(0, 16).toUpperCase();
+            String styleName = baseName + hash;
+            Element elem = this.getStyle(desc, styleName);
+            if (elem == null) {
+                return styleName;
+            }
         }
-        return null;
     }
 
     public final void addAutoStyle(final Element styleElem) {
@@ -312,6 +321,7 @@ public class ODXMLDocument {
     }
 
     protected static interface ElementTransformer {
+
         Element transform(Element elem) throws JDOMException;
     }
 
@@ -381,8 +391,9 @@ public class ODXMLDocument {
         if (elem == null) {
             this.mergeAll(other, rpath, addTransf);
         } else {
-            if (!this.getDocument().getRootElement().isAncestor(elem))
+            if (!this.getDocument().getRootElement().isAncestor(elem)) {
                 throw new IllegalArgumentException(elem + " not part of " + this);
+            }
             this.add(new IFactory<Element>() {
                 public Element createChecked() {
                     return elem;
@@ -407,8 +418,9 @@ public class ODXMLDocument {
                     final Content c = iter.next();
                     if (c instanceof Element) {
                         final Element transformedElem = addTransf.transform((Element) c);
-                        if (transformedElem != null)
+                        if (transformedElem != null) {
                             listToAdd.add(transformedElem);
+                        }
                     } else {
                         // keep non element as when addTransf is null
                         // perhaps use a Transformer<Content> to allow to remove or modify
@@ -418,10 +430,11 @@ public class ODXMLDocument {
             }
             // on crée si besoin le "récepteur"
             final Element thisElem = elemF.createChecked();
-            if (lindex < 0)
+            if (lindex < 0) {
                 thisElem.addContent(listToAdd);
-            else
+            } else {
                 thisElem.addContent(lindex, listToAdd);
+            }
         }
     }
 
@@ -444,10 +457,11 @@ public class ODXMLDocument {
             final Element otherElem = doc.getDescendant(path);
             if (otherElem != null) {
                 final Element myParent = this.getDescendant(XPathUtils.parentOf(path));
-                if (index == -1)
+                if (index == -1) {
                     myParent.addContent((Element) otherElem.clone());
-                else
+                } else {
                     myParent.addContent(index, (Element) otherElem.clone());
+                }
             }
         }
     }
